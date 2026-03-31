@@ -1,0 +1,16 @@
+🎮 UUI 프로젝트 (4인 모바일 멀티플레이 파티 게임)본 프로젝트는 4인의 플레이어가 각자의 모바일 기기로 접속하여 경쟁과 협동을 오가는 네트워크 멀티플레이 파티 게임입니다.📝 게임 기획 및 기본 흐름우리 게임의 핵심 재미 요소는 **'어제의 적이 오늘의 방해꾼이 되는 비대칭 대전'**입니다. 게임은 총 5개의 챕터(스테이지)로 진행됩니다.Stage 1 (개인전): 4명이 모두 동일한 조건에서 경쟁합니다. (Stage 101~199 중 랜덤 등장)👑 룰: 1스테이지를 가장 빨리 클리어한 1등(승자)은 다음 스테이지의 **'방해꾼(Saboteur)'**이 됩니다.Stage 2 ~ 4 (1 vs 3 비대칭 대전): 1명의 방해꾼과 3명의 일반 플레이어가 대결합니다.일반 플레이어는 스테이지를 클리어해야 하고, 방해꾼은 이를 방해하는 전용 화면/조작을 부여받습니다.각 스테이지가 끝날 때마다 점수(클리어 시간)를 정산하여 다음 스테이지의 방해꾼을 새로 선정합니다.Stage 5 (협동전): 마지막은 4명이 모두 힘을 합쳐 하나의 목표를 달성하는 협동 스테이지로 마무리됩니다.📂 프로젝트 폴더 구조팀원 간의 코드 충돌을 막고 유지보수를 쉽게 하기 위해 패키지를 철저히 분리했습니다. org.androidtown.uui 패키지 하위 구조는 다음과 같습니다.패키지명역할 및 설명주요 파일core게임의 뼈대이자 심장. 스테이지 간의 이동, 플레이어의 점수(시간) 누적, Firebase 통신 등 앱의 전반적인 흐름을 제어합니다.MainActivity.java, NetworkManager.javastages실제 게임 화면들. 각 챕터별로 하위 폴더(stage1, stage2...)를 나누어 각자의 스테이지 액티비티를 구현합니다.Stage101Activity.java, Stage201Activity.java 등utils공통 기능 모음. 앱 전체에서 공용으로 쓰이는 BGM, 효과음 재생기 등의 도구를 모아둡니다.SoundManager.java💻 스테이지(Activity) 개발 가이드 (필독)각자 맡은 스테이지 액티비티를 개발할 때 **반드시 지켜야 할 통신 규칙(Intent Contract)**입니다. 모든 스테이지 전환은 core/MainActivity가 통제합니다.1. 방해꾼 여부 확인 (Input)Stage 2 ~ 4를 개발할 때는 화면이 켜질 때 Intent를 확인하여 현재 유저가 방해꾼인지 일반 플레이어인지 판단하고 UI를 분기해야 합니다.Java// 스테이지 Activity의 onCreate 내부
+boolean isSaboteur = getIntent().getBooleanExtra("IS_SABOTEUR", false);
+
+if (isSaboteur) {
+    // TODO: 방해꾼 전용 화면(XML) 세팅 및 방해 로직 실행
+} else {
+    // TODO: 일반 플레이어용 화면(XML) 세팅 및 클리어 로직 실행
+}
+2. 클리어 시간 반환 (Output)스테이지 클리어(또는 타임아웃) 시, 해당 기기에서 소요된 **시간(밀리초)**을 MainActivity로 돌려주고 액티비티를 종료해야 합니다.Java// 게임 종료/클리어 시 호출하는 메서드 내부
+long timeTakenMs = 15000; // 예시: 15초 걸림 (실제 측정된 시간값 넣기)
+
+Intent resultIntent = new Intent();
+resultIntent.putExtra("CLEAR_TIME", timeTakenMs);
+setResult(RESULT_OK, resultIntent);
+finish(); // 스테이지 종료 (MainActivity로 돌아감)
+🚀 Git 협업 컨벤션메인 브랜치: main 브랜치는 항상 에러 없이 실행 가능한 상태를 유지합니다. 직접 Push하지 마세요.작업 브랜치: 기능이나 스테이지를 개발할 때는 각자 브랜치를 새로 파서 작업합니다.예시: feature/stage101, feature/sound-manager커밋 메시지: 다른 사람이 봐도 무엇을 수정했는지 알 수 있게 명확히 적어주세요.feat: Stage 101 화면 UI 구현fix: 방해꾼 판별 로직 오류 수정
